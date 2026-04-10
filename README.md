@@ -84,20 +84,279 @@ The real production source code is kept private. This showcase focuses on the pr
 
 ![Power BI Dashboard](docs/screenshots/powerbi-dashboard.png)
 
-## Architecture And Database
+## System Flow
 
-### System Flow
+The full system flow is available in:
 
-![Bakerz Bite System Flow](docs/diagrams/architecture-flow.png)
+- [system-flow.html](system-flow.html)
 
-### ER Diagram
+GitHub can also render the Mermaid diagrams directly in this README:
 
-![Bakerz Bite ER Diagram](docs/diagrams/erd.png)
+### Authentication Flow
+
+```mermaid
+flowchart LR
+    A([User Access]) --> B{"Already logged in?"}
+    B -- "No" --> C["Login Page"]
+    B -- "Yes" --> D{"role_id?"}
+    C --> E["POST /login"]
+    E --> F{"Authentication"}
+    F -- "Failed" --> C
+    F -- "Success" --> D
+    D -- "role=1 Client" --> G([Storefront])
+    D -- "role=2 Admin" --> H([Admin Dashboard])
+
+    C2["Register Page"] --> R["POST /register"]
+    R --> R1{"Validate\n@gmail.com only"}
+    R1 -- "Error" --> C2
+    R1 -- "OK" --> R2["Create user\nrole_id=1\nrank=Bronze"]
+    R2 --> R3["Send verification\nemail"]
+    R3 --> G
+```
+
+### Client Shopping Flow
+
+```mermaid
+flowchart TD
+    HOME([Home Page /filter]) --> HF["Select health\nconditions / BMI"]
+    HOME --> BS["Best Sellers"]
+    HOME --> SP["Seasonal Products"]
+    HOME --> CP["Coffee and Espresso"]
+    HOME --> DEAL["Deal of the Day"]
+    HOME --> CS["Coming Soon"]
+
+    HF -->|"heath_id AND logic"| PRODUCTS
+
+    SEARCH(["Search /search"]) --> PRODUCTS
+    CAT(["Category Filter /shop/category"]) --> PRODUCTS
+
+    PRODUCTS["Product Listing"] --> QV["Quick View\nAJAX modal"]
+    PRODUCTS --> PD["Product Detail\nproductsingle/{id}"]
+
+    PD --> REVIEW["Submit Review\n1-5 stars"]
+    PD --> WISH["Wishlist\nPOST /add-to-wishlist"]
+    PD --> ADDCART["Add to Cart\nPOST /cart/new_add"]
+
+    ADDCART --> CARTDB[("cart table")]
+    ADDCART --> CARTSESSION[("Session cart")]
+    CARTDB <-->|"getsession sync"| CARTSESSION
+
+    CARTSESSION --> CARTPAGE["Cart Page\n/cart/show"]
+    CARTPAGE --> UPDATEQTY["Update quantity"]
+    CARTPAGE --> DELITEM["Remove item"]
+    CARTPAGE --> CHECKOUT["Checkout\n/showcheckout"]
+
+    CHECKOUT --> CHKINV{"Inventory\navailable?"}
+    CHKINV -- "Out of stock" --> CARTPAGE
+    CHKINV -- "OK" --> CREATEORDER["Create Order\nstatus=Pending"]
+    CREATEORDER --> ORDERDETAILS["Create OrderDetails"]
+    CREATEORDER --> INVENTORY["Decrease product\ninventory"]
+    CREATEORDER --> NOTIF["Create Notification\ntype=order"]
+    CREATEORDER --> VNP["Redirect to VNPay"]
+
+    VNP --> VNPRETURN{"vnp_ResponseCode?"}
+    VNPRETURN -- "00 Success" --> PAID["Order status = Paid"]
+    VNPRETURN -- "Other" --> FAILED["Payment Failed"]
+    PAID --> PROFILE
+    FAILED --> PROFILE
+
+    PROFILE([Profile /client/profile]) --> ORDERS["Orders by\nstatus tab"]
+    ORDERS --> CANCELBTN["Cancel order"]
+    ORDERS --> RECHECK["Repay order"]
+```
+
+### Order Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending : Client checkout / VNPay redirect
+    Pending --> Paid : VNPay callback success or admin confirm
+    Paid --> Confirmed : Admin confirms order
+    Confirmed --> Delivered : Admin marks delivered
+    Delivered --> [*]
+
+    Pending --> Cancel : Client or admin cancels
+    Paid --> Cancel : Admin cancels
+    Cancel --> [*]
+```
+
+### Rank And Rewards Flow
+
+```mermaid
+flowchart LR
+    REG([Register account]) --> BR["Bronze\ndefault rank"]
+    BR -->|"Earn points\nvia purchases"| GO["Gold"]
+    GO -->|"Earn more\npoints"| DI["Diamond"]
+
+    BR --> DISC_BR["Discount\nBronze level"]
+    GO --> DISC_GO["Discount\nGold level"]
+    DI --> DISC_DI["Discount\nDiamond level"]
+    DI --> WORKSHOP["Workshop\nRegistration\nDiamond only"]
+
+    WORKSHOP --> WSTATUS{"Admin review"}
+    WSTATUS -- Approved --> WS_OK["Approved"]
+    WSTATUS -- Cancelled --> WS_CANCEL["Cancelled"]
+```
+
+### Health-Based Product Filter
+
+```mermaid
+flowchart TD
+    CLIENT([Client]) --> BMI["Enter height and weight\nBMI calculation"]
+    BMI --> BMI_CALC["JS calculates BMI\nauto-select weight tag"]
+    CLIENT --> MANUAL["Manually select\nhealth conditions"]
+    BMI_CALC --> SELECT["heath_id array"]
+    MANUAL --> SELECT
+
+    SELECT --> QUERY["Query link_product_heathy\nAND logic\nCOUNT DISTINCT = selected tags"]
+    QUERY --> RESULT["Matched Products"]
+
+    ADMIN_H([Admin]) --> HEATHY_MGMT["Manage Healthy Types"]
+    HEATHY_MGMT --> HEATHY_TABLE[("heathy_catalog table")]
+    HEATHY_TABLE --> LINK[("link_product_heathy pivot")]
+    PRODUCT_MGMT["Manage Products"] --> LINK
+```
+
+### Admin Management Overview
+
+```mermaid
+flowchart TD
+    DASH([Admin Dashboard\nPower BI + Notifications]) --> PM["Product Management"]
+    DASH --> OM["Order Management"]
+    DASH --> UM["User Management"]
+    DASH --> CM["Category Management"]
+    DASH --> DM["Discount Management"]
+    DASH --> BM["Banner Management"]
+    DASH --> CHEF["Chef Management"]
+    DASH --> BLOG["Blog Management"]
+    DASH --> DEAL["Deal of the Day"]
+    DASH --> SOON["Coming Soon"]
+    DASH --> WS["Workshop Management"]
+    DASH --> CONTACT["Contact Messages"]
+    DASH --> SM["Social Media"]
+    DASH --> REVIEW["Review Management"]
+
+    PM --> STOCK["Stock Management"]
+    STOCK --> INSTOCK["In Stock"]
+    STOCK --> OUTSTOCK["Out of Stock"]
+    STOCK --> CHECKSTOCK["Check Stock"]
+
+    NOTIF_O["Order Notification"] -->|"sidebar bell"| DASH
+    NOTIF_R["Review Notification"] -->|"sidebar bell"| DASH
+```
+
+### Database Relationships
+
+```mermaid
+erDiagram
+    user {
+        int user_id PK
+        string name
+        string email
+        int role_id FK
+        string rank
+        int score
+        int isdelete
+    }
+    product {
+        int product_id PK
+        string product_name
+        int inventory
+        decimal price
+        string status
+        int isdelete
+    }
+    order {
+        int order_id PK
+        int user_id FK
+        decimal total
+        decimal pay
+        string status
+        string delivery_address
+    }
+    orderdetails {
+        int id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+        decimal selling_price
+        decimal discount
+    }
+    cart {
+        int id PK
+        int user_id FK
+        int product_id FK
+        int quantity
+    }
+    category {
+        int category_id PK
+        string category_name
+        int isdelete
+    }
+    heathy_catalog {
+        int heath_id PK
+        string name
+        int isdelete
+    }
+    discount {
+        int discount_id PK
+        string discount_name
+        decimal discount
+        int isdelete
+    }
+    notifications {
+        int id PK
+        int user_id FK
+        int order_id FK
+        int review_id FK
+        string type
+        int is_read
+    }
+    userreview {
+        int ID PK
+        int user_id FK
+        int product_id FK
+        int ratestar
+        string comment
+        int is_deleted
+    }
+    workshop {
+        int id PK
+        int user_id FK
+        string product
+        string status
+        int isdelete
+    }
+
+    user ||--o{ order : places
+    user ||--o{ cart : has
+    user ||--o{ userreview : writes
+    user ||--o{ workshop : registers
+    order ||--o{ orderdetails : contains
+    product ||--o{ orderdetails : in
+    product ||--o{ cart : in
+    product ||--o{ userreview : receives
+    product }o--o{ category : linkcatalogproduct
+    product }o--o{ heathy_catalog : link_product_heathy
+    product }o--o{ discount : discountproduct
+```
+
+### CI/CD Deployment Flow
+
+```mermaid
+flowchart LR
+    DEV([Developer]) -->|"git push master"| GH["GitHub\nmaster branch"]
+    GH -->|"trigger"| GHA["GitHub Actions\ndeploy.yml"]
+    GHA -->|"SSH connect"| SERVER["Production Server"]
+    SERVER -->|"git pull"| CODE["Update codebase"]
+    CODE -->|"php artisan"| CLEAR["config:clear\ncache:clear"]
+    CLEAR --> LIVE([Live Site])
+```
 
 ## Repository Structure
 
+- `system-flow.html`: full interactive system flow documentation
 - `docs/screenshots`: UI screenshots used in this showcase
-- `docs/diagrams`: architecture and ERD images
 - `docs/features`: feature summaries
 - `docs/api`: public-facing route and API notes
 - `docs/demo`: links for live demo or video demo
@@ -108,7 +367,7 @@ The real production source code is kept private. This showcase focuses on the pr
 
 - Product summary
 - Feature overview
-- Architecture and ERD diagrams
+- System flow documentation
 - Selected screenshots
 - Portfolio and presentation materials
 
@@ -133,7 +392,7 @@ If you are a recruiter, interviewer, or reviewer and would like a walkthrough of
 ## Supporting Documents
 
 - Feature summaries: [docs/features](docs/features)
-- Architecture notes: [docs/diagrams](docs/diagrams)
+- System flow: [system-flow.html](system-flow.html)
 - Project portfolio notes: [portfolio](portfolio)
 - Live demo details: [docs/demo/demo-link.md](docs/demo/demo-link.md)
 - Video demo details: [docs/demo/video-link.md](docs/demo/video-link.md)

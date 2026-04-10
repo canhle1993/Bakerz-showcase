@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bakerz Bite — System Flow</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      padding: 32px 24px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #f5a623, #e85d04);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 40px;
+    }
+    .section {
+      background: #16162a;
+      border: 1px solid #2a2a45;
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    .section h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2a2a45;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .badge-client  { background: #1a3a5c; color: #60b4ff; }
+    .badge-admin   { background: #2a1a3a; color: #c084fc; }
+    .badge-system  { background: #1a3a2a; color: #4ade80; }
+    .badge-payment { background: #3a2a10; color: #fbbf24; }
+    .mermaid { width: 100%; overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+<h1>🎂 Bakerz Bite — System Flow</h1>
+<p class="subtitle">Laravel 11 · MySQL · VNPay · Power BI · GitHub Actions</p>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 1. AUTH FLOW -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>🔐 Authentication Flow <span class="badge badge-system">System</span></h2>
+  <div class="mermaid">
+flowchart LR
+    A([User visits site]) --> B{"Already logged in?"}
+    B -- No --> C[Login Page]
+    B -- Yes --> D{"role_id?"}
+    C --> E[POST login]
+    E --> F{"Authenticate"}
+    F -- Failed --> C
+    F -- Success --> D
+    D -- "role=1 Client" --> G([Storefront])
+    D -- "role=2 Admin" --> H([Admin Dashboard])
+
+    C2[Register Page] --> R[POST register]
+    R --> R1{"Validate\ngmail.com only"}
+    R1 -- Error --> C2
+    R1 -- OK --> R2["Create user\nrole_id=1\nrank=Bronze"]
+    R2 --> R3[Send confirmation email]
+    R3 --> G
+
+    style G fill:#1a3a5c,color:#60b4ff,stroke:#60b4ff
+    style H fill:#2a1a3a,color:#c084fc,stroke:#c084fc
+    style R2 fill:#1a3a2a,color:#4ade80,stroke:#4ade80
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 2. CLIENT SHOPPING FLOW -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>🛒 Client Shopping Flow <span class="badge badge-client">Client</span></h2>
+  <div class="mermaid">
+flowchart TD
+    HOME([Home Page]) --> HF["Select health conditions\n+ BMI input"]
+    HOME --> BS[Best Sellers]
+    HOME --> SP[Seasonal Products]
+    HOME --> CP[Coffee and Espresso]
+    HOME --> DEAL[Deal of the Day]
+    HOME --> CS[Coming Soon]
+
+    HF --> |"heath_id AND logic"| PRODUCTS
+    SEARCH([Search]) --> PRODUCTS
+    CAT([Category Filter]) --> PRODUCTS
+
+    PRODUCTS["Product List"] --> QV["Quick View\nAJAX modal"]
+    PRODUCTS --> PD["Product Detail\nproductsingle"]
+
+    PD --> REVIEW["Submit Review\n1-5 stars"]
+    PD --> WISH["Wishlist\nadd-to-wishlist"]
+    PD --> ADDCART["Add to Cart\ncart new_add"]
+
+    ADDCART --> CARTDB[("cart table\nDB")]
+    ADDCART --> CARTSESSION[("Session cart")]
+    CARTDB <--> |"getsession sync"| CARTSESSION
+
+    CARTSESSION --> CARTPAGE["Cart Page\ncart show"]
+    CARTPAGE --> UPDATEQTY["Update quantity"]
+    CARTPAGE --> DELITEM["Remove item"]
+    CARTPAGE --> CHECKOUT["Checkout\nshowcheckout"]
+
+    CHECKOUT --> CHKINV{"Check\ninventory"}
+    CHKINV -- "Out of Stock" --> CARTPAGE
+    CHKINV -- OK --> CREATEORDER["Create Order\nstatus=Pending"]
+    CREATEORDER --> ORDERDETAILS["Create OrderDetails\nquantity, price, discount"]
+    CREATEORDER --> INVENTORY["Deduct product\ninventory"]
+    CREATEORDER --> NOTIF["Create Notification\ntype=order"]
+    CREATEORDER --> VNP["Redirect to VNPay"]
+
+    VNP --> VNPRETURN{"vnp_ResponseCode"}
+    VNPRETURN -- "00 Success" --> PAID["Order status = Paid"]
+    VNPRETURN -- "Other" --> FAILED["Payment Failed"]
+    PAID --> PROFILE
+    FAILED --> PROFILE
+
+    PROFILE([Profile]) --> ORDERS["Orders by\nstatus tab"]
+    ORDERS --> CANCEL_BTN["Cancel order\nstatus=Cancel"]
+    ORDERS --> RECHECK["Retry payment\nRecheckout"]
+
+    style HOME fill:#1a3a5c,color:#60b4ff,stroke:#60b4ff
+    style CARTDB fill:#2a2a45,color:#aaa,stroke:#444
+    style CARTSESSION fill:#2a2a45,color:#aaa,stroke:#444
+    style VNP fill:#3a2a10,color:#fbbf24,stroke:#fbbf24
+    style PAID fill:#1a3a2a,color:#4ade80,stroke:#4ade80
+    style FAILED fill:#3a1a1a,color:#f87171,stroke:#f87171
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 3. ORDER LIFECYCLE (ADMIN) -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>📦 Order Lifecycle <span class="badge badge-admin">Admin</span></h2>
+  <div class="mermaid">
+stateDiagram-v2
+    [*] --> Pending : Client checkout
+    Pending --> Paid : VNPay callback 00
+    Paid --> Confirmed : Admin confirms
+    Confirmed --> Delivered : Admin marks delivered
+    Delivered --> [*]
+
+    Pending --> Cancel : Client cancels
+    Paid --> Cancel : Admin cancels
+    Cancel --> [*]
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 4. RANK & REWARDS -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>🏆 Rank &amp; Rewards Flow <span class="badge badge-client">Client</span></h2>
+  <div class="mermaid">
+flowchart LR
+    REG([Register account]) --> BR["Bronze\ndefault rank"]
+    BR --> |"Earn points\nvia purchases"| GO["Gold"]
+    GO --> |"Earn more\npoints"| DI["Diamond"]
+
+    BR --> DISC_BR["Discount\nBronze level"]
+    GO --> DISC_GO["Discount\nGold level"]
+    DI --> DISC_DI["Discount\nDiamond level"]
+    DI --> WORKSHOP["Workshop\nRegistration\nDiamond only"]
+
+    WORKSHOP --> WSTATUS{"Admin review"}
+    WSTATUS -- Approved --> WS_OK["Approved"]
+    WSTATUS -- Cancelled --> WS_CANCEL["Cancelled"]
+
+    style BR fill:#5c3d2e,color:#d4a27a,stroke:#d4a27a
+    style GO fill:#3a3010,color:#fbbf24,stroke:#fbbf24
+    style DI fill:#1a2a3a,color:#93c5fd,stroke:#93c5fd
+    style WORKSHOP fill:#2a1a3a,color:#c084fc,stroke:#c084fc
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 5. HEALTH FILTER FLOW -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>💚 Health-Based Product Filter <span class="badge badge-client">Client</span></h2>
+  <div class="mermaid">
+flowchart TD
+    CLIENT([Client]) --> BMI["Enter height and weight\nBMI calculation"]
+    BMI --> BMI_CALC["JS calculates BMI\nauto-select weight tag"]
+    CLIENT --> MANUAL["Manually select\nhealth conditions"]
+    BMI_CALC --> SELECT["heath_id array"]
+    MANUAL --> SELECT
+
+    SELECT --> QUERY["Query link_product_heathy\nAND logic\nCOUNT DISTINCT = selected tags"]
+    QUERY --> RESULT["Matched\nProducts"]
+
+    ADMIN_H([Admin]) --> HEATHY_MGMT["Manage Healthy Types\nheathy resource"]
+    HEATHY_MGMT --> HEATHY_TABLE[("heathy_catalog\ntable")]
+    HEATHY_TABLE --> LINK[("link_product_heathy\npivot")]
+    PRODUCT_MGMT["Manage Products"] --> LINK
+
+    style SELECT fill:#1a3a2a,color:#4ade80,stroke:#4ade80
+    style RESULT fill:#1a3a5c,color:#60b4ff,stroke:#60b4ff
+    style HEATHY_TABLE fill:#2a2a45,color:#aaa,stroke:#444
+    style LINK fill:#2a2a45,color:#aaa,stroke:#444
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 6. ADMIN MANAGEMENT FLOW -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>🛠 Admin Management Overview <span class="badge badge-admin">Admin</span></h2>
+  <div class="mermaid">
+flowchart TD
+    DASH([Admin Dashboard\nPower BI + Notifications]) --> PM["Product Mgmt\nCRUD + 4 images\ncatalog and healthy sync"]
+    DASH --> OM["Order Mgmt\nPending Paid Confirmed\nDelivered Cancel"]
+    DASH --> UM["User Mgmt\nClient + Admin\nUpgrade Downgrade Blacklist"]
+    DASH --> CM["Category Mgmt\ncatalog resource"]
+    DASH --> DM["Discount Mgmt\ndiscount resource\nsetup product link"]
+    DASH --> BM["Banner Mgmt\nbanner resource"]
+    DASH --> CHEF["Chef Mgmt\nadmin chefs"]
+    DASH --> BLOG["Blog Mgmt\nadmin blog"]
+    DASH --> DEAL["Deal of the Day"]
+    DASH --> SOON["Coming Soon"]
+    DASH --> WS["Workshop Mgmt\napprove cancel"]
+    DASH --> CONTACT["Contact Messages\nreply via email"]
+    DASH --> SM["Social Media"]
+    DASH --> REVIEW["Review Mgmt\nview hide reply"]
+
+    PM --> STOCK["Stock Management"]
+    STOCK --> INSTOCK["In Stock list"]
+    STOCK --> OUTSTOCK["Out of Stock list"]
+    STOCK --> CHECKSTOCK["Check Stock\nstockin workflow"]
+
+    NOTIF_O["Order Notification"] --> |"sidebar bell"| DASH
+    NOTIF_R["Review Notification"] --> |"sidebar bell"| DASH
+
+    style DASH fill:#2a1a3a,color:#c084fc,stroke:#c084fc
+    style STOCK fill:#1a3a2a,color:#4ade80,stroke:#4ade80
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 7. DATABASE SCHEMA OVERVIEW -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>🗄 Database Relationships <span class="badge badge-system">System</span></h2>
+  <div class="mermaid">
+erDiagram
+    user {
+        int user_id PK
+        string name
+        string email
+        int role_id FK
+        string rank
+        int score
+        int isdelete
+    }
+    product {
+        int product_id PK
+        string product_name
+        int inventory
+        decimal price
+        string status
+        int isdelete
+    }
+    order {
+        int order_id PK
+        int user_id FK
+        decimal total
+        decimal pay
+        string status
+        string delivery_address
+    }
+    orderdetails {
+        int id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+        decimal selling_price
+        decimal discount
+    }
+    cart {
+        int id PK
+        int user_id FK
+        int product_id FK
+        int quantity
+    }
+    category {
+        int category_id PK
+        string category_name
+        int isdelete
+    }
+    heathy_catalog {
+        int heath_id PK
+        string name
+        int isdelete
+    }
+    discount {
+        int discount_id PK
+        string discount_name
+        decimal discount
+        int isdelete
+    }
+    notifications {
+        int id PK
+        int user_id FK
+        int order_id FK
+        int review_id FK
+        string type
+        int is_read
+    }
+    userreview {
+        int ID PK
+        int user_id FK
+        int product_id FK
+        int ratestar
+        string comment
+        int is_deleted
+    }
+    workshop {
+        int id PK
+        int user_id FK
+        string product
+        string status
+        int isdelete
+    }
+
+    user ||--o{ order : "places"
+    user ||--o{ cart : "has"
+    user ||--o{ userreview : "writes"
+    user ||--o{ workshop : "registers"
+    order ||--o{ orderdetails : "contains"
+    product ||--o{ orderdetails : "in"
+    product ||--o{ cart : "in"
+    product ||--o{ userreview : "receives"
+    product }o--o{ category : "linkcatalogproduct"
+    product }o--o{ heathy_catalog : "link_product_heathy"
+    product }o--o{ discount : "discountproduct"
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 8. DEPLOYMENT FLOW -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>🚀 CI/CD Deployment Flow <span class="badge badge-system">System</span></h2>
+  <div class="mermaid">
+flowchart LR
+    DEV([Developer]) --> |"git push master"| GH["GitHub\nmaster branch"]
+    GH --> |"trigger"| GHA["GitHub Actions\ndeploy.yml"]
+    GHA --> |"SSH connect"| SERVER["Production Server"]
+    SERVER --> |"git pull"| CODE["Update codebase"]
+    CODE --> |"php artisan"| CLEAR["config:clear\ncache:clear"]
+    CLEAR --> LIVE([Live Site])
+
+    style GH fill:#1a1a2a,color:#60b4ff,stroke:#60b4ff
+    style GHA fill:#2a1a1a,color:#f97316,stroke:#f97316
+    style LIVE fill:#1a3a2a,color:#4ade80,stroke:#4ade80
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1e1e3a',
+      primaryTextColor: '#e0e0e0',
+      primaryBorderColor: '#3a3a60',
+      lineColor: '#6060a0',
+      secondaryColor: '#2a2a4a',
+      tertiaryColor: '#16162a',
+      background: '#0f0f1a',
+      mainBkg: '#16162a',
+      nodeBorder: '#3a3a60',
+      clusterBkg: '#1a1a2e',
+      titleColor: '#e0e0e0',
+      edgeLabelBackground: '#1a1a2e',
+      fontFamily: 'Segoe UI, sans-serif',
+    },
+    flowchart: { curve: 'basis', padding: 20 },
+    er: { useMaxWidth: true },
+  });
+</script>
+</body>
+</html>
