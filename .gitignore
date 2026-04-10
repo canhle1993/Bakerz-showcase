@@ -1,0 +1,13 @@
+# Keep this repository focused on showcase assets only
+
+.DS_Store
+Thumbs.db
+
+# Do not place real source code or secrets here
+.env
+vendor/
+node_modules/
+storage/
+bootstrap/cache/
+database/backup/*.sql
+
