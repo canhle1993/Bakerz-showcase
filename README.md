@@ -2,6 +2,8 @@
 
 Public showcase repository for the **Bakerz Bite** project.
 
+![Bakerz Bite Cover](docs/screenshots/cover-banner.png)
+
 ## At A Glance
 
 **Bakerz Bite** is a Laravel-based bakery e-commerce web application that combines customer shopping flows, health-based product suggestions, reward experiences, and admin-side operations in one system.
