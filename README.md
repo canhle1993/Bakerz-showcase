@@ -1,14 +1,57 @@
 # Bakerz Bite Showcase
 
-Public portfolio repository for the **Bakerz Bite** project.
+Public showcase repository for the **Bakerz Bite** project.
 
-This repository is designed for recruiters, interviewers, and reviewers who want to quickly understand the project without accessing the private source code.
+## At A Glance
+
+**Bakerz Bite** is a Laravel-based bakery e-commerce web application that combines customer shopping flows, health-based product suggestions, reward experiences, and admin-side operations in one system.
+
+- Project type: Team-based academic capstone / real product showcase
+- My role: Full-stack contributor focused on client experience, feature implementation, admin modules, and deployment support
+- Main stack: Laravel 11, PHP 8.2, Blade, Bootstrap, jQuery, MySQL / MariaDB
+- Live demo: [http://103.153.72.209/](http://103.153.72.209/)
+- Demo video: [YouTube walkthrough](https://www.youtube.com/watch?v=FIMq_x9z6Uc&t=4s)
+- Recognition: [Featured by Aptech Vietnam](https://aptechvietnam.com.vn/san-pham-hoc-vien/website-ban-banh-va-ca-phe-truc-tuyen-tien-loi-bakerz-bite/)
+
+## Quick Links
+
+- [My Contributions](#my-contributions)
+- [What Makes This Project Notable](#what-makes-this-project-notable)
+- [Live Links](#live-links)
+- [Screenshots](#screenshots)
+- [System Flow](#system-flow)
+- [Repository Structure](#repository-structure)
+- [Private Source Code Note](#private-source-code-note)
+- [Supporting Documents](#supporting-documents)
 
 ## Overview
 
 Bakerz Bite is a bakery e-commerce web application built with Laravel. The project combines customer shopping flows, health-based product suggestions, order processing, reward-based experiences, and admin-side management tools in one system.
 
-The real production source code is kept private. This showcase focuses on the product, architecture, and implementation highlights.
+This public repository is designed for recruiters, interviewers, and reviewers who want to quickly understand the project without accessing the private production source code.
+
+## My Contributions
+
+- Designed and implemented major customer-facing pages, including the homepage and product presentation flows
+- Built core shopping-related features such as category browsing, cart data handling, and order history
+- Developed the health-based product suggestion experience based on BMI and selected health conditions
+- Implemented promotional and engagement modules such as Deal of the Day, best-seller content, Workshop, Blog, Our Chef, Coming Soon, and Bakerz Bite Rewards
+- Contributed to admin-side functionality, including Power BI reporting, healthy-type management, and product quantity management
+- Supported feature integration, UI behavior fixes, CI/CD deployment flow, and overall project completion across both client and admin areas
+
+## What Makes This Project Notable
+
+- Health-based product suggestion flow using BMI and selected health conditions
+- VNPay integration for online payment processing
+- Power BI dashboard reporting for admin-side analytics
+- CI/CD deployment pipeline using GitHub Actions and server automation
+- Full end-to-end flow across both client-facing and admin-facing modules
+
+## Live Links
+
+- Live Demo: [http://103.153.72.209/](http://103.153.72.209/)
+- Project Demo Video: [https://www.youtube.com/watch?v=FIMq_x9z6Uc&t=4s](https://www.youtube.com/watch?v=FIMq_x9z6Uc&t=4s)
+- Featured Project Article: [https://aptechvietnam.com.vn/san-pham-hoc-vien/website-ban-banh-va-ca-phe-truc-tuyen-tien-loi-bakerz-bite/](https://aptechvietnam.com.vn/san-pham-hoc-vien/website-ban-banh-va-ca-phe-truc-tuyen-tien-loi-bakerz-bite/)
 
 ## Highlights
 
@@ -22,12 +65,6 @@ The real production source code is kept private. This showcase focuses on the pr
 - VNPay integration for payments
 - CI/CD deployment to server using GitHub Actions
 
-## Links
-
-- Live Demo: [http://103.153.72.209/](http://103.153.72.209/)
-- Project Demo Video: [https://www.youtube.com/watch?v=FIMq_x9z6Uc&t=4s](https://www.youtube.com/watch?v=FIMq_x9z6Uc&t=4s)
-- Featured Project Article: [https://aptechvietnam.com.vn/san-pham-hoc-vien/website-ban-banh-va-ca-phe-truc-tuyen-tien-loi-bakerz-bite/](https://aptechvietnam.com.vn/san-pham-hoc-vien/website-ban-banh-va-ca-phe-truc-tuyen-tien-loi-bakerz-bite/)
-
 ## Tech Stack
 
 - Backend: Laravel 11, PHP 8.2
@@ -37,15 +74,6 @@ The real production source code is kept private. This showcase focuses on the pr
 - Payment: VNPay
 - Maps: Embedded map on contact page
 - Deployment: GitHub Actions, SSH-based server deployment
-
-## My Contributions
-
-- Designed and implemented major customer-facing pages, including the homepage and product presentation flows
-- Built core shopping-related features such as category browsing, cart data handling, and order history
-- Developed the health-based product suggestion experience based on BMI and selected health conditions
-- Implemented promotional and engagement modules such as Deal of the Day, best-seller content, Workshop, Blog, Our Chef, Coming Soon, and Bakerz Bite Rewards
-- Contributed to admin-side functionality, including Power BI reporting, healthy-type management, and product quantity management
-- Supported feature integration, UI behavior fixes, CI/CD deployment flow, and overall project completion across both client and admin areas
 
 ## Deployment Workflow
 
@@ -90,7 +118,7 @@ The full system flow is available in:
 
 - [system-flow.html](system-flow.html)
 
-GitHub can also render the Mermaid diagrams directly in this README:
+GitHub can also render the Mermaid diagrams directly in this README.
 
 ### Authentication Flow
 
@@ -125,7 +153,7 @@ flowchart TD
     HOME --> DEAL["Deal of the Day"]
     HOME --> CS["Coming Soon"]
 
-    HF -->|"heath_id AND logic"| PRODUCTS
+    HF -->|"health tag AND logic"| PRODUCTS
 
     SEARCH(["Search /search"]) --> PRODUCTS
     CAT(["Category Filter /shop/category"]) --> PRODUCTS
@@ -205,7 +233,7 @@ flowchart TD
     CLIENT([Client]) --> BMI["Enter height and weight\nBMI calculation"]
     BMI --> BMI_CALC["JS calculates BMI\nauto-select weight tag"]
     CLIENT --> MANUAL["Manually select\nhealth conditions"]
-    BMI_CALC --> SELECT["heath_id array"]
+    BMI_CALC --> SELECT["health_id selection"]
     MANUAL --> SELECT
 
     SELECT --> QUERY["Query link_product_heathy\nAND logic\nCOUNT DISTINCT = selected tags"]
@@ -383,7 +411,9 @@ flowchart LR
 
 The full source code for Bakerz Bite is private.
 
-If you are a recruiter, interviewer, or reviewer and would like a walkthrough of the implementation, I can provide:
+This repository is intentionally used as a public showcase for architecture, features, UI evidence, and individual contribution summary.
+
+If you are a recruiter, interviewer, or reviewer and would like a deeper walkthrough, I can provide:
 
 - a live demo
 - a guided screen-sharing session
