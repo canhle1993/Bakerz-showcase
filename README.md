@@ -1,5 +1,7 @@
 # Bakerz Bite Showcase
 
+![Laravel 11](https://img.shields.io/badge/Laravel%2011-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP 8.2](https://img.shields.io/badge/PHP%208.2-777BB4?style=flat-square&logo=php&logoColor=white) ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white) ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=flat-square&logo=bootstrap&logoColor=white) ![jQuery](https://img.shields.io/badge/jQuery-0769AD?style=flat-square&logo=jquery&logoColor=white) ![VNPay](https://img.shields.io/badge/VNPay-005BAA?style=flat-square) ![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?style=flat-square&logoColor=black) ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
+
 Public showcase repository for the **Bakerz Bite** project.
 
 ![Bakerz Bite Cover](docs/screenshots/cover-banner.png)
@@ -25,6 +27,7 @@ Public showcase repository for the **Bakerz Bite** project.
 - [Repository Structure](#repository-structure)
 - [Private Source Code Note](#private-source-code-note)
 - [Supporting Documents](#supporting-documents)
+- [Author](#author)
 
 ## Overview
 
@@ -428,3 +431,13 @@ If you are a recruiter, interviewer, or reviewer and would like a deeper walkthr
 - Project portfolio notes: [portfolio](portfolio)
 - Live demo details: [docs/demo/demo-link.md](docs/demo/demo-link.md)
 - Video demo details: [docs/demo/video-link.md](docs/demo/video-link.md)
+
+## Author
+
+**Lê Văn Cảnh** · Java Full-Stack Developer · Ho Chi Minh City, Vietnam
+
+- Portfolio: [canhle1993.github.io/canhle-portfolio](https://canhle1993.github.io/canhle-portfolio/)
+- Email: [aplevancanh1993@gmail.com](mailto:aplevancanh1993@gmail.com)
+- GitHub: [@canhle1993](https://github.com/canhle1993)
+
+Happy to walk through the private source code, architecture decisions and my part of the work in an interview.
